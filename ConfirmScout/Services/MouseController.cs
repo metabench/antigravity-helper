@@ -31,6 +31,7 @@ public class MouseController
     private const uint MOUSEEVENTF_LEFTUP = 0x0004;
     private const uint WM_VSCROLL = 0x0115;
     private const uint SB_LINEDOWN = 1;
+    private const int CLICK_DELAY_MS = 50;
 
     private readonly Logger _logger;
     private DateTime _lastClickTime = DateTime.MinValue;
@@ -62,7 +63,7 @@ public class MouseController
         }
     }
 
-    public bool ClickAtPosition(IntPtr windowHandle, Rect boundingBox)
+    public async Task<bool> ClickAtPositionAsync(IntPtr windowHandle, Rect boundingBox)
     {
         // Check cooldown
         if (DateTime.Now - _lastClickTime < _clickCooldown)
@@ -81,12 +82,12 @@ public class MouseController
             var point = new POINT { X = centerX, Y = centerY };
             ClientToScreen(windowHandle, ref point);
 
-            // Move cursor and click
+            // Move cursor and click with async delays
             SetCursorPos(point.X, point.Y);
-            System.Threading.Thread.Sleep(50); // Small delay
+            await Task.Delay(CLICK_DELAY_MS);
 
             mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-            System.Threading.Thread.Sleep(50);
+            await Task.Delay(CLICK_DELAY_MS);
             mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 
             _lastClickTime = DateTime.Now;

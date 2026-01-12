@@ -8,7 +8,8 @@ public class StabilityTracker
     private readonly Dictionary<string, StableDetection> _detections = new();
     private readonly Logger _logger;
     private const int RequiredFrames = 2;
-    private const double PositionTolerance = 10.0; // pixels
+    private const double PositionTolerance = 10.0; // pixels for X, Y position
+    private const double SizeTolerance = 15.0; // pixels for Width, Height dimensions
 
     public event EventHandler<StableDetection>? StableDetectionFound;
 
@@ -75,10 +76,11 @@ public class StabilityTracker
 
     private bool AreBoundingBoxesSimilar(Rect box1, Rect box2)
     {
+        // Use separate tolerances for position and size
         return Math.Abs(box1.X - box2.X) < PositionTolerance &&
                Math.Abs(box1.Y - box2.Y) < PositionTolerance &&
-               Math.Abs(box1.Width - box2.Width) < PositionTolerance &&
-               Math.Abs(box1.Height - box2.Height) < PositionTolerance;
+               Math.Abs(box1.Width - box2.Width) < SizeTolerance &&
+               Math.Abs(box1.Height - box2.Height) < SizeTolerance;
     }
 
     public StableDetection? GetStableDetection(string text)

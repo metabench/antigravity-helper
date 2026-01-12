@@ -22,6 +22,7 @@ public partial class MainWindow : Window
     private bool _isScrollSearchActive = false;
     private int _scrollStepCount = 0;
     private const int MaxScrollSteps = 30;
+    private const int ScrollStepDelayMs = 500; // Delay between scroll steps for OCR processing
 
     public MainWindow()
     {
@@ -192,7 +193,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnClickHotkeyPressed(object? sender, EventArgs e)
+    private async void OnClickHotkeyPressed(object? sender, EventArgs e)
     {
         if (!_isMonitoring || _selectedWindow == IntPtr.Zero)
         {
@@ -210,13 +211,13 @@ public partial class MainWindow : Window
         }
 
         // Check if we have a current detection
-        if (_currentDetection != null && _stabilityTracker != null)
+        if (_currentDetection != null && _stabilityTracker != null && _mouseController != null)
         {
             // Verify detection is still present
             var stableDetection = _stabilityTracker.GetStableDetection(_currentDetection.Text);
             if (stableDetection != null)
             {
-                _mouseController?.ClickAtPosition(_selectedWindow, stableDetection.BoundingBox);
+                await _mouseController.ClickAtPositionAsync(_selectedWindow, stableDetection.BoundingBox);
                 Dispatcher.Invoke(() =>
                 {
                     AppendLog($"Clicked on '{stableDetection.Text}'");
@@ -274,7 +275,7 @@ public partial class MainWindow : Window
             Dispatcher.Invoke(() => UpdateStatus($"Scroll search: Step {_scrollStepCount}/{MaxScrollSteps}"));
             
             // Wait for a moment to allow OCR to process
-            await Task.Delay(500);
+            await Task.Delay(ScrollStepDelayMs);
 
             // Check if target found (will be handled by OnStableDetectionFound)
         }
