@@ -1,0 +1,141 @@
+// This file contains the full implementation of OCR for Windows runtime
+// It's provided as reference for when the application runs on actual Windows
+// The code uses Windows.Media.Ocr which requires Windows 10 build 10240 or later
+
+/*
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Graphics.Imaging;
+using Windows.Media.Ocr;
+using Windows.Storage.Streams;
+using System.Windows;
+using ConfirmScout.Models;
+
+namespace ConfirmScout.Services;
+
+public class OcrServiceWindows
+{
+    private readonly OcrEngine _ocrEngine;
+    private readonly string[] _targetWords = { "Confirm", "Continue", "Approve" };
+    private readonly Logger _logger;
+
+    public OcrServiceWindows(Logger logger)
+    {
+        _logger = logger;
+        
+        try
+        {
+            // Initialize OCR engine with English language
+            var language = new Windows.Globalization.Language("en-US");
+            _ocrEngine = OcrEngine.TryCreateFromLanguage(language) 
+                ?? OcrEngine.TryCreateFromUserProfileLanguages();
+            
+            _logger.Log($"OCR Engine initialized with language: {_ocrEngine.RecognizerLanguage.DisplayName}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Log($"Failed to initialize OCR Engine: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<List<DetectedText>> ProcessImageAsync(byte[] imageData, int width, int height)
+    {
+        var detections = new List<DetectedText>();
+
+        if (_ocrEngine == null)
+        {
+            _logger.Log("OCR Engine is not initialized");
+            return detections;
+        }
+
+        try
+        {
+            // Create an InMemoryRandomAccessStream from byte array
+            using var stream = new InMemoryRandomAccessStream();
+            await stream.WriteAsync(imageData.AsBuffer());
+            stream.Seek(0);
+
+            // Decode the image
+            var decoder = await BitmapDecoder.CreateAsync(stream);
+            
+            // Get the software bitmap in the format required by OCR
+            var softwareBitmap = await decoder.GetSoftwareBitmapAsync(
+                BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Premultiplied
+            );
+
+            // Ensure the bitmap is in the correct format
+            if (softwareBitmap.BitmapPixelFormat != BitmapPixelFormat.Bgra8 ||
+                softwareBitmap.BitmapAlphaMode != BitmapAlphaMode.Premultiplied)
+            {
+                softwareBitmap = SoftwareBitmap.Convert(
+                    softwareBitmap,
+                    BitmapPixelFormat.Bgra8,
+                    BitmapAlphaMode.Premultiplied
+                );
+            }
+
+            // Perform OCR
+            var ocrResult = await _ocrEngine.RecognizeAsync(softwareBitmap);
+
+            // Process OCR results
+            foreach (var line in ocrResult.Lines)
+            {
+                foreach (var word in line.Words)
+                {
+                    // Check if the word matches any target word (case-insensitive)
+                    foreach (var targetWord in _targetWords)
+                    {
+                        if (word.Text.Equals(targetWord, StringComparison.OrdinalIgnoreCase))
+                        {
+                            var boundingBox = new Rect(
+                                word.BoundingRect.X,
+                                word.BoundingRect.Y,
+                                word.BoundingRect.Width,
+                                word.BoundingRect.Height
+                            );
+
+                            var detection = new DetectedText
+                            {
+                                Text = word.Text,
+                                BoundingBox = boundingBox,
+                                Confidence = 0.95, // Windows OCR doesn't provide per-word confidence
+                                DetectedAt = DateTime.Now
+                            };
+
+                            detections.Add(detection);
+                            _logger.LogDetection(word.Text, 0.95);
+                            break; // Move to next word after first match
+                        }
+                    }
+                }
+            }
+
+            if (detections.Count > 0)
+            {
+                _logger.Log($"OCR found {detections.Count} target word(s) in image");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Log($"OCR processing error: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                _logger.Log($"Inner exception: {ex.InnerException.Message}");
+            }
+        }
+
+        return detections;
+    }
+
+    public bool IsOcrAvailable()
+    {
+        return _ocrEngine != null;
+    }
+
+    public string GetRecognizerLanguage()
+    {
+        return _ocrEngine?.RecognizerLanguage?.DisplayName ?? "Not initialized";
+    }
+}
+*/
